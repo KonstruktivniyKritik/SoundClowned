@@ -1,0 +1,17 @@
+# Этап 1: Используем базовый образ Node
+FROM node:20-alpine AS development
+
+# Устанавливаем рабочую директорию в контейнере
+WORKDIR /app
+
+# Копируем файлы package.json и package-lock.json
+# и устанавливаем зависимости
+COPY package*.json ./
+RUN npm install
+
+# Копируем остальной код (будет перекрыто томом в docker-compose)
+COPY . .
+
+# Команда запуска (npm start или npm run dev, в зависимости от CRA/Vite)
+CMD ["npm", "start"] 
+# Если вы используете Vite/Webpack, может потребоваться 'npm run dev' или аналогично

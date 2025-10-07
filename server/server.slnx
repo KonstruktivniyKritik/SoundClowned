@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="artists_microservice/artists_microservice.csproj" />
+  <Project Path="Identity Provider/Identity Provider.csproj" />
+</Solution>

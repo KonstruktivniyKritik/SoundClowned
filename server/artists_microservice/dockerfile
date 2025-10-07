@@ -1,0 +1,27 @@
+# ----------------------------------------------------
+# Этап 1: Сборка (Используем SDK для компиляции)
+# ----------------------------------------------------
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Копируем .csproj и восстанавливаем зависимости
+# Путь относительный к WORKDIR
+COPY artists_microservice.csproj .
+RUN dotnet restore
+
+# Копируем остальной код
+COPY . .
+
+# Публикуем приложение
+RUN dotnet publish "artists_microservice.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+
+# ----------------------------------------------------
+# Этап 2: Финал (Используем минимальный ASP.NET Runtime)
+# ----------------------------------------------------
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Установка точки входа для запуска скомпилированного приложения
+ENTRYPOINT ["dotnet", "artists_microservice.dll"]

@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------
+  # 1. MongoDB Service (UNCHANGED)
+  # ---------------------------------------------
+  mongodb:
+    image: mongo:latest
+    container_name: soundclowned_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  # ---------------------------------------------
+  # 2. Identity Provider Service (Новый сервис)
+  # ---------------------------------------------
+  identity:
+    # Используем папку Identity Provider, которую вы создали
+    build:
+      context: ./server/Identity\ Provider
+      dockerfile: Dockerfile
+    container_name: soundclowned_identity_provider
+    restart: unless-stopped
+    # Identity API будет доступен на 8081
+    ports:
+      - "8081:80" 
+    # В данный момент Identity Provider не зависит от Mongo, но может понадобиться позже
+    # depends_on:
+    #   - mongodb 
+    environment:
+      # Настройки, специфичные для JWT, могут быть добавлены здесь
+      ASPNETCORE_ENVIRONMENT: Development
+      
+  # ---------------------------------------------
+  # 3. Artists API Service
+  # ---------------------------------------------
+  api:
+    build:
+      context: ./server/artists_microservice
+      dockerfile: Dockerfile
+    container_name: soundclowned_artists_api
+    restart: unless-stopped
+    # Artists API будет доступен на 8080
+    ports:
+      - "8080:80" 
+    depends_on:
+      - mongodb
+      - identity # Теперь Artists API зависит от Identity Provider (для обмена ключами или настройки)
+    environment:
+      ConnectionStrings__ArtistDb: mongodb://mongodb:27017
+      ASPNETCORE_ENVIRONMENT: Development
+      
+  # ---------------------------------------------
+  # 4. Client Service (React Frontend)
+  # ---------------------------------------------
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: soundclowned_client
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - api 
+    environment:
+      # URL клиента для запросов к API/Identity (через хост-машину)
+      REACT_APP_ARTISTS_API_URL: http://localhost:8080
+      REACT_APP_IDENTITY_API_URL: http://localhost:8081
+      
+# Определение тома для персистентности данных MongoDB
+volumes:
+  mongodb_data:
