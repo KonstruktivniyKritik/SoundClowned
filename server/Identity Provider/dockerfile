@@ -1,0 +1,23 @@
+# Этап 1: Используем официальный образ .NET SDK для сборки
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Копируем .csproj файл и восстанавливаем зависимости
+COPY ["Identity Provider.csproj", "."]
+RUN dotnet restore "Identity Provider.csproj"
+
+# Копируем остальной исходный код
+COPY . .
+# Публикация приложения
+RUN dotnet publish "Identity Provider.csproj" -c Release -o /app/publish
+
+# Этап 2: Используем более легковесный образ ASP.NET для запуска
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Приложение будет слушать на порту 80
+EXPOSE 80
+
+# Команда запуска
+ENTRYPOINT ["dotnet", "Identity Provider.dll"]

@@ -1,8 +1,27 @@
-version: '3.8'
-
 services:
   # ---------------------------------------------
-  # 1. MongoDB Service (UNCHANGED)
+  # 1. PostgreSQL Service (NEW)
+  # ---------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: soundclowned_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: soundclowned_user
+      POSTGRES_PASSWORD: my_strong_password
+      POSTGRES_DB: identity_db # База данных для Identity Provider
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soundclowned_user -d identity_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------
+  # 2. MongoDB Service (UNCHANGED)
   # ---------------------------------------------
   mongodb:
     image: mongo:latest
@@ -14,27 +33,30 @@ services:
       - mongodb_data:/data/db
 
   # ---------------------------------------------
-  # 2. Identity Provider Service (Новый сервис)
+  # 3. Identity Provider Service 
   # ---------------------------------------------
   identity:
-    # Используем папку Identity Provider, которую вы создали
     build:
-      context: ./server/Identity\ Provider
+      context: ./server/Identity Provider
       dockerfile: Dockerfile
     container_name: soundclowned_identity_provider
     restart: unless-stopped
-    # Identity API будет доступен на 8081
     ports:
-      - "8081:80" 
-    # В данный момент Identity Provider не зависит от Mongo, но может понадобиться позже
-    # depends_on:
-    #   - mongodb 
+      - "8081:8080" 
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      # Настройки, специфичные для JWT, могут быть добавлены здесь
       ASPNETCORE_ENVIRONMENT: Development
+      # Строка подключения для Identity Provider
+      ConnectionStrings__PostgresDb: "Host=postgres;Port=5432;Database=identity_db;Username=soundclowned_user;Password=my_strong_password"
+      # JWT Настройки (очень важно для безопасности!)
+      JwtSettings__Secret: "ThisIsAVeryStrongAndLongSecretKeyForJWTAuthToken"
+      JwtSettings__Issuer: "SoundclownedIdentity"
+      JwtSettings__Audience: "SoundclownedApi"
       
   # ---------------------------------------------
-  # 3. Artists API Service
+  # 4. Artists API Service
   # ---------------------------------------------
   api:
     build:
@@ -42,18 +64,17 @@ services:
       dockerfile: Dockerfile
     container_name: soundclowned_artists_api
     restart: unless-stopped
-    # Artists API будет доступен на 8080
     ports:
       - "8080:80" 
     depends_on:
       - mongodb
-      - identity # Теперь Artists API зависит от Identity Provider (для обмена ключами или настройки)
+      - identity
     environment:
       ConnectionStrings__ArtistDb: mongodb://mongodb:27017
       ASPNETCORE_ENVIRONMENT: Development
       
   # ---------------------------------------------
-  # 4. Client Service (React Frontend)
+  # 5. Client Service (React Frontend)
   # ---------------------------------------------
   client:
     build:
@@ -68,10 +89,10 @@ services:
     depends_on:
       - api 
     environment:
-      # URL клиента для запросов к API/Identity (через хост-машину)
       REACT_APP_ARTISTS_API_URL: http://localhost:8080
       REACT_APP_IDENTITY_API_URL: http://localhost:8081
       
-# Определение тома для персистентности данных MongoDB
+# Определение томов для персистентности данных
 volumes:
   mongodb_data:
+  postgres_data: # Добавлен новый том для Postgres
