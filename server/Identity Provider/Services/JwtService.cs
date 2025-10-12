@@ -26,7 +26,7 @@ namespace IdentityProvider.Services
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             // 2. Определение времени жизни токена
-            var expires = DateTime.Now.AddDays(7); // Токен действителен 7 дней
+            var expires = DateTime.UtcNow.AddDays(_jwtSettings.ExpirationDays);
 
             // 3. Создание описателя токена (Token Descriptor)
             var tokenDescriptor = new SecurityTokenDescriptor

@@ -11,4 +11,7 @@ public class JwtSettings
     
     // Аудитория (для кого предназначен токен), например, "SoundclownedApi"
     public string Audience { get; set; } = string.Empty;
+    
+    // Время жизни токена в днях
+    public int ExpirationDays { get; set; } = 7;
 }

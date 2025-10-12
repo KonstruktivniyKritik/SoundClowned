@@ -19,5 +19,12 @@ namespace IdentityProvider.Services
         /// <param name="password"></param>
         /// <returns></returns>
         bool VerifyPassword(string password, string hash);
+        
+        /// <summary>
+        /// Проверяет сложность пароля
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        bool IsPasswordStrong(string password);
     }
 }

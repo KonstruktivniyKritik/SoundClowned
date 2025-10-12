@@ -6,7 +6,7 @@ namespace IdentityProvider.DTOs;
 /// Модель для входящих данных запроса регистрации нового пользователя.
 /// </summary>
 public record RegisterRequest(
-    [Required] string Username, 
-    [Required] [EmailAddress] string Email, // Добавляем email для большей реалистичности
-    [Required] string Password
+    [Required] [MinLength(3)] [MaxLength(50)] string Username, 
+    [Required] [EmailAddress] string Email,
+    [Required] [MinLength(8)] [MaxLength(100)] string Password
 );

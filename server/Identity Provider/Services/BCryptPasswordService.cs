@@ -32,5 +32,20 @@ namespace IdentityProvider.Services
         {
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
+
+        /// <summary>
+        /// Проверяет сложность пароля (минимум 8 символов, содержит цифры, заглавные и строчные буквы).
+        /// </summary>
+        /// <param name="password">Пароль для проверки.</param>
+        /// <returns>True, если пароль соответствует требованиям сложности.</returns>
+        public bool IsPasswordStrong(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+                return false;
+
+            return password.Any(char.IsUpper) && 
+                   password.Any(char.IsLower) && 
+                   password.Any(char.IsDigit);
+        }
     }
 }

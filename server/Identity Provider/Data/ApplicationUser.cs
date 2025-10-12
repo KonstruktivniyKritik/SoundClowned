@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace IdentityProvider.Data;
+
 public class ApplicationUser
 {
     public Guid Id { get; set; }

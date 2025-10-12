@@ -5,6 +5,7 @@ using IdentityProvider.DTOs;
 using IdentityProvider.Services;
 using System.Security.Claims;
 using IdentityProvider.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace IdentityProvider.Endpoints
 {
@@ -19,13 +20,13 @@ namespace IdentityProvider.Endpoints
                                .WithTags("Authentication");
 
             // ВАШ ЭНДПОИНТ /login (теперь /api/auth/login)
-            authGroup.MapPost("/login", async (LoginRequest request, ITokenService tokenService, IUserRepository repositoryService, IPasswordService passwordService) =>
+            authGroup.MapPost("/login", async (LoginRequest request, ITokenService tokenService, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthEndpoints> logger) =>
             {
                 ApplicationUser? User = await repositoryService.FindByUsernameAsync(request.Username);
                 if (User == null)
                     return Results.Unauthorized();
 
-                Console.WriteLine("User Found");
+                logger.LogInformation("User {Username} found for login attempt", request.Username);
                 if (!passwordService.VerifyPassword(request.Password, User.PasswordHash))
                     return Results.Unauthorized();
 
@@ -42,12 +43,16 @@ namespace IdentityProvider.Endpoints
             .Produces<LoginResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-            authGroup.MapPost("/register", async (RegisterRequest request, IUserRepository repositoryService, IPasswordService passwordService) =>
+            authGroup.MapPost("/register", async (RegisterRequest request, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthEndpoints> logger) =>
             {
                 try
                 {
+                    // Проверка сложности пароля
+                    if (!passwordService.IsPasswordStrong(request.Password))
+                        return Results.BadRequest("Password must be at least 8 characters long and contain uppercase, lowercase letters and numbers.");
+
                     if (await repositoryService.FindByUsernameAsync(request.Username) != null)
-                        Results.Conflict("User with this username is already exist");
+                        return Results.Conflict("User with this username is already exist");
 
                     ApplicationUser newUser = new ApplicationUser()
                     {
@@ -63,15 +68,21 @@ namespace IdentityProvider.Endpoints
 
                     return Results.Created("/api/auth/users/created", new RegisterResponse("Registered"));
                 }
-                catch
+                catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate key") == true)
                 {
-                    return Results.Conflict("An unexpected error occurred during registration.");
+                    return Results.Conflict("User with this username or email already exists.");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Unexpected error during user registration for {Username}", request.Username);
+                    return Results.Problem("An unexpected error occurred during registration.");
                 }
             })
             .WithName("Register")
             .Produces<RegisterResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status409Conflict)
-            .Produces(StatusCodes.Status201Created);
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status500InternalServerError);
 
             return app;
         }

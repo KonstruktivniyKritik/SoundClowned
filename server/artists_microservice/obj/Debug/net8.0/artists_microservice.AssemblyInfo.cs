@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("artists_microservice")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+63ebfbd2c4d4d17cdb1eea5e9202b36c0f91ebb9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+928bc8d835ca7abb817d28bbc7704839b129d3b2")]
 [assembly: System.Reflection.AssemblyProductAttribute("artists_microservice")]
 [assembly: System.Reflection.AssemblyTitleAttribute("artists_microservice")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
