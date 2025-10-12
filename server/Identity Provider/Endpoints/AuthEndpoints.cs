@@ -6,12 +6,16 @@ using IdentityProvider.Services;
 using System.Security.Claims;
 using IdentityProvider.Repositories;
 using Microsoft.EntityFrameworkCore;
+using IdentityProvider.Data;
 
 namespace IdentityProvider.Endpoints
 {
     // Статический класс для группировки всех эндпоинтов, связанных с аутентификацией (Login, Register)
     public static class AuthEndpoints
     {
+        // Нестатический класс-заглушка для логирования, чтобы обойти ошибку CS0718
+        public class AuthLogger { }
+
         public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
         {
             // Создаем группу эндпоинтов с общим префиксом /api/auth
@@ -20,7 +24,7 @@ namespace IdentityProvider.Endpoints
                                .WithTags("Authentication");
 
             // ВАШ ЭНДПОИНТ /login (теперь /api/auth/login)
-            authGroup.MapPost("/login", async (LoginRequest request, ITokenService tokenService, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthEndpoints> logger) =>
+            authGroup.MapPost("/login", async (LoginRequest request, ITokenService tokenService, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthLogger> logger) =>
             {
                 ApplicationUser? User = await repositoryService.FindByUsernameAsync(request.Username);
                 if (User == null)
@@ -43,7 +47,7 @@ namespace IdentityProvider.Endpoints
             .Produces<LoginResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-            authGroup.MapPost("/register", async (RegisterRequest request, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthEndpoints> logger) =>
+            authGroup.MapPost("/register", async (RegisterRequest request, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthLogger> logger) =>
             {
                 try
                 {
