@@ -1,30 +1,30 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\artists_microservice\\artists_microservice.csproj": {}
+    "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\ApiGateway\\ApiGateway.csproj": {}
   },
   "projects": {
-    "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\artists_microservice\\artists_microservice.csproj": {
+    "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\ApiGateway\\ApiGateway.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\artists_microservice\\artists_microservice.csproj",
-        "projectName": "artists_microservice",
-        "projectPath": "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\artists_microservice\\artists_microservice.csproj",
+        "projectUniqueName": "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\ApiGateway\\ApiGateway.csproj",
+        "projectName": "ApiGateway",
+        "projectPath": "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\ApiGateway\\ApiGateway.csproj",
         "packagesPath": "C:\\Users\\spiry\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\artists_microservice\\obj\\",
+        "outputPath": "C:\\Users\\spiry\\Desktop\\progz\\SoundClowned\\server\\ApiGateway\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\spiry\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net9.0"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
+          "net9.0": {
+            "targetAlias": "net9.0",
             "projectReferences": {}
           }
         },
@@ -41,8 +41,22 @@
         "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Ocelot": {
+              "target": "Package",
+              "version": "[24.0.1, )"
+            },
+            "Ocelot.Provider.Consul": {
+              "target": "Package",
+              "version": "[24.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -54,24 +68,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.18, 8.0.18]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Host.win-x64",
-              "version": "[8.0.18, 8.0.18]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.18, 8.0.18]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[8.0.18, 8.0.18]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"

@@ -56,22 +56,25 @@ services:
       JwtSettings__Audience: "SoundclownedApi"
       
   # ---------------------------------------------
-  # 4. Artists API Service
+  # 4. API Gateway Service (UNCHANGED)
   # ---------------------------------------------
-  api:
+  gateway:
     build:
-      context: ./server/artists_microservice
+      context: ./server/ApiGateway
       dockerfile: Dockerfile
-    container_name: soundclowned_artists_api
+    container_name: soundclowned_api_gateway
     restart: unless-stopped
     ports:
-      - "8080:80" 
+      - "8082:8080" 
     depends_on:
-      - mongodb
-      - identity
+      identity:
+        condition: service_started
     environment:
-      ConnectionStrings__ArtistDb: mongodb://mongodb:27017
       ASPNETCORE_ENVIRONMENT: Development
+      # JWT Настройки (очень важно для безопасности!)
+      JwtSettings__Secret: "ThisIsAVeryStrongAndLongSecretKeyForJWTAuthToken"
+      JwtSettings__Issuer: "SoundclownedIdentity"
+      JwtSettings__Audience: "SoundclownedApi"
       
   # ---------------------------------------------
   # 5. Client Service (React Frontend)
@@ -86,8 +89,6 @@ services:
     volumes:
       - ./client:/app
       - /app/node_modules
-    depends_on:
-      - api 
     environment:
       REACT_APP_ARTISTS_API_URL: http://localhost:8080
       REACT_APP_IDENTITY_API_URL: http://localhost:8081

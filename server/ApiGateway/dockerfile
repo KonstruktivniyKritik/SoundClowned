@@ -1,0 +1,29 @@
+# ----------------------------------------------------
+# 1. BUILD STAGE (Сборка)
+# ----------------------------------------------------
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Копируем .csproj файл и восстанавливаем зависимости
+# Имя файла проекта должно быть 'ApiGateway.csproj'
+COPY ["ApiGateway.csproj", "."]
+RUN dotnet restore "ApiGateway.csproj"
+
+# Копируем остальной исходный код
+COPY . .
+RUN dotnet build "ApiGateway.csproj" -c Release -o /app/build
+
+# ----------------------------------------------------
+# 2. PUBLISH STAGE (Публикация)
+# ----------------------------------------------------
+RUN dotnet publish "ApiGateway.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# ----------------------------------------------------
+# 3. FINAL STAGE (Финальный образ)
+# ----------------------------------------------------
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Запуск приложения
+ENTRYPOINT ["dotnet", "ApiGateway.dll"]

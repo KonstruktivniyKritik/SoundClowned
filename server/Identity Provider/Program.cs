@@ -62,10 +62,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") 
+        // Gateway: http://api-gateway (внутреннее имя Docker-сервиса)
+        policy.WithOrigins("http://api-gateway") 
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); 
+              .AllowCredentials(); // Разрешаем куки и заголовки авторизации
     });
 });
 
