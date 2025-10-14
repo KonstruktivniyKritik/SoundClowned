@@ -33,7 +33,41 @@ services:
       - mongodb_data:/data/db
 
   # ---------------------------------------------
-  # 3. Identity Provider Service 
+  # 3. Zookeeper (Required for Kafka)
+  # ---------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    container_name: soundclowned_zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  # ---------------------------------------------
+  # 4. Kafka Broker
+  # ---------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: soundclowned_kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092" # EXTERNAL порт для локальных инструментов
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Настройки слушателей: INTERNAL для контейнеров, EXTERNAL для хоста
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+
+  # ---------------------------------------------
+  # 5. Identity Provider Service 
   # ---------------------------------------------
   identity:
     build:
@@ -48,15 +82,14 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      # Строка подключения для Identity Provider
       ConnectionStrings__PostgresDb: "Host=postgres;Port=5432;Database=identity_db;Username=soundclowned_user;Password=my_strong_password"
-      # JWT Настройки (очень важно для безопасности!)
       JwtSettings__Secret: "ThisIsAVeryStrongAndLongSecretKeyForJWTAuthToken"
       JwtSettings__Issuer: "SoundclownedIdentity"
       JwtSettings__Audience: "SoundclownedApi"
+      KafkaSettings__BrokerList: "kafka:9092"
       
   # ---------------------------------------------
-  # 4. API Gateway Service (UNCHANGED)
+  # 6. API Gateway Service
   # ---------------------------------------------
   gateway:
     build:
@@ -71,13 +104,12 @@ services:
         condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      # JWT Настройки (очень важно для безопасности!)
       JwtSettings__Secret: "ThisIsAVeryStrongAndLongSecretKeyForJWTAuthToken"
       JwtSettings__Issuer: "SoundclownedIdentity"
       JwtSettings__Audience: "SoundclownedApi"
       
   # ---------------------------------------------
-  # 5. Client Service (React Frontend)
+  # 7. Client Service (React Frontend)
   # ---------------------------------------------
   client:
     build:
@@ -93,7 +125,6 @@ services:
       REACT_APP_ARTISTS_API_URL: http://localhost:8080
       REACT_APP_IDENTITY_API_URL: http://localhost:8081
       
-# Определение томов для персистентности данных
 volumes:
   mongodb_data:
   postgres_data: # Добавлен новый том для Postgres

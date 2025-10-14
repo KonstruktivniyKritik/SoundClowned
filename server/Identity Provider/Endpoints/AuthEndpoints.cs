@@ -47,7 +47,7 @@ namespace IdentityProvider.Endpoints
             .Produces<LoginResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-            authGroup.MapPost("/register", async (RegisterRequest request, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthLogger> logger) =>
+            authGroup.MapPost("/register", async (RegisterRequest request, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthLogger> logger, IEventProducer eventProducer) =>
             {
                 try
                 {
@@ -69,6 +69,13 @@ namespace IdentityProvider.Endpoints
                     };
 
                     await repositoryService.AddUserAsync(newUser);
+
+                    await eventProducer.ProduceAsync("NewUsers",
+                                                     newUser.Id.ToString(),
+                                                     new Events.UserRegisteredEvent(newUser.Id,
+                                                                                    newUser.Username,
+                                                                                    newUser.Email,
+                                                                                    newUser.CreatedAt));
 
                     return Results.Created("/api/auth/users/created", new RegisterResponse("Registered"));
                 }

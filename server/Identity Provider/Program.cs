@@ -79,6 +79,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<ITokenService, JwtService>();
 builder.Services.AddTransient<IPasswordService, BCryptPasswordService>();
 builder.Services.AddTransient<IUserRepository, PostgresRepository>();
+builder.Services.AddTransient<IEventProducer, KafkaProducerService>();
 
 var app = builder.Build();
 
