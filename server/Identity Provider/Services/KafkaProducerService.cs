@@ -35,7 +35,7 @@ namespace IdentityProvider.Services
             };
 
             // Создаем экземпляр продюсера
-            _producer = new ProducerBuilder<string, string>(config).SetKeySerializer(Serializers.Utf8).SetValueSerializer(Serializers.Utf8).Build();
+            _producer = new ProducerBuilder<string, string>(config).SetKeySerializer(Serializers.Utf8).Build();
             _logger.LogInformation("Kafka Producer initialized for broker: {Broker}", kafkaBroker);
         }
 
