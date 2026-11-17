@@ -26,11 +26,12 @@ namespace IdentityProvider.Endpoints
             // ВАШ ЭНДПОИНТ /login (теперь /api/auth/login)
             authGroup.MapPost("/login", async (LoginRequest request, ITokenService tokenService, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthLogger> logger) =>
             {
-                ApplicationUser? User = await repositoryService.FindByUsernameAsync(request.Username);
+                logger.LogInformation($"Get request {request.ToString()}");
+                ApplicationUser? User = await repositoryService.FindByUsernameAsync(request.Email);
                 if (User == null)
                     return Results.Unauthorized();
 
-                logger.LogInformation("User {Username} found for login attempt", request.Username);
+                logger.LogInformation("User {Email} found for login attempt", request.Email);
                 if (!passwordService.VerifyPassword(request.Password, User.PasswordHash))
                     return Results.Unauthorized();
 
@@ -47,14 +48,15 @@ namespace IdentityProvider.Endpoints
             .Produces<LoginResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
-            authGroup.MapPost("/register", async (RegisterRequest request, IUserRepository repositoryService, IPasswordService passwordService, ILogger<AuthLogger> logger, IEventProducer eventProducer) =>
+            authGroup.MapPost("/register", async (
+            RegisterRequest request,
+            IUserRepository repositoryService,
+            IPasswordService passwordService,
+            ILogger<AuthLogger> logger,
+            IServiceScopeFactory scopeFactory) =>
             {
                 try
                 {
-                    // Проверка сложности пароля
-                    if (!passwordService.IsPasswordStrong(request.Password))
-                        return Results.BadRequest("Password must be at least 8 characters long and contain uppercase, lowercase letters and numbers.");
-
                     if (await repositoryService.FindByUsernameAsync(request.Username) != null)
                         return Results.Conflict("User with this username is already exist");
 
@@ -70,12 +72,28 @@ namespace IdentityProvider.Endpoints
 
                     await repositoryService.AddUserAsync(newUser);
 
-                    await eventProducer.ProduceAsync("NewUsers",
-                                                     newUser.Id.ToString(),
-                                                     new Events.UserRegisteredEvent(newUser.Id,
-                                                                                    newUser.Username,
-                                                                                    newUser.Email,
-                                                                                    newUser.CreatedAt));
+                    var userId = newUser.Id.ToString();
+                    var userEvent = new Events.UserRegisteredEvent(
+                        newUser.Id,
+                        newUser.Username,
+                        newUser.Email,
+                        newUser.CreatedAt);
+
+                    _ = Task.Run(async () =>
+                    {
+                        await using var scope = scopeFactory.CreateAsyncScope();
+                        var scopedProducer = scope.ServiceProvider.GetRequiredService<IEventProducer>();
+                        var scopedLogger = scope.ServiceProvider.GetRequiredService<ILogger<AuthLogger>>();
+
+                        try
+                        {
+                            await scopedProducer.ProduceAsync("NewUsers", userId, userEvent);
+                        }
+                        catch (Exception ex)
+                        {
+                            scopedLogger.LogError(ex, "Failed to publish UserRegisteredEvent for {UserId}", userId);
+                        }
+                    });
 
                     return Results.Created("/api/auth/users/created", new RegisterResponse("Registered"));
                 }
@@ -94,6 +112,7 @@ namespace IdentityProvider.Endpoints
             .Produces(StatusCodes.Status409Conflict)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status500InternalServerError);
+
 
             return app;
         }

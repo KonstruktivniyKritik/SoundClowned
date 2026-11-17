@@ -55,7 +55,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center; /* Центрирует по вертикали */
-    align-items: flex-start; /* ВЫРАВНИВАНИЕ ПО ЛЕВОМУ КРАЮ */
+    align-items: center; /* Центрируем содержимое по горизонтали */
 
     padding: 40px 30px; /* Немного увеличим боковые отступы */
     box-sizing: border-box; /* Чтобы padding не влиял на общую ширину */
@@ -108,4 +108,11 @@ body {
     max-width: var(--content-max-width);
     text-align: center;
     margin: 0;
+}
+
+/* Контейнер для блока авторизации в LandingPage */
+.auth-section {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
 }

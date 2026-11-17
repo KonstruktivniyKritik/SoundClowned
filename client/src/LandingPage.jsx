@@ -1,17 +1,13 @@
 import React from 'react';
 import './LandingPage.css';
 
-function LandingPage() {
-    // В реальном приложении здесь была бы логика навигации или вызова модального окна
-    const handleAuthClick = () => {
-        // Заменил alert на console.log, чтобы избежать проблем в iframe
-        console.log('Переход к окну авторизации...');
-    };
+function LandingPage({ onAuthClose }) {
+    const [isRegisterMode, setIsRegisterMode] = React.useState(false);
 
     return (
         <div className="landing-container">
             <header className="header">
-                {/* ДОБАВЛЕНА ОБЕРТКА ДЛЯ ЦЕНТРИРОВАНИЯ */}
+                {/* ОГРАНИЧИВАЕМ МАКСИМАЛЬНУЮ ШИРИНУ И ЦЕНТРИРУЕМ */}
                 <div className="header-content"> 
                     <h1 className="logo">SOUNDCLOWNED</h1>
                 </div>
@@ -29,9 +25,10 @@ function LandingPage() {
                     Начните слушать тысячи часов бесплатной музыки прямо сейчас.
                 </p>
 
+                {/* Кнопка вызывающая модальное окно */}
                 <button 
                     className="auth-button"
-                    onClick={handleAuthClick}
+                    onClick={() => window.dispatchEvent(new CustomEvent('openAuth'))}
                 >
                     Войти на сайт
                 </button>

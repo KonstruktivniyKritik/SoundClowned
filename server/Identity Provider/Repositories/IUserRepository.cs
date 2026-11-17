@@ -13,7 +13,7 @@ namespace IdentityProvider.Repositories
         /// </summary>
         /// <param name="username">Имя пользователя.</param>
         /// <returns>Объект ApplicationUser или null, если не найден.</returns>
-        Task<ApplicationUser?> FindByUsernameAsync(string username);
+        Task<ApplicationUser?> FindByUsernameAsync(string email);
 
         Task<ApplicationUser> AddUserAsync(ApplicationUser user);
     }

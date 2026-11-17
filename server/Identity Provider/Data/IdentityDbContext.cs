@@ -14,7 +14,7 @@ namespace IdentityProvider.Data
             : base(options)
         {
         }
-
+        
         // Коллекция пользователей в базе данных (соответствует таблице "Users")
         public DbSet<ApplicationUser> Users { get; set; }
 
