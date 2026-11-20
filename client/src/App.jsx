@@ -1,34 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LandingPage from './LandingPage';
 import AuthModal from './AuthModal';
+import Dashboard from './Dashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function AppContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [currentHash, setCurrentHash] = useState(window.location.hash);
   const auth = useAuth();
 
-  // Обработка события от кнопки "Войти на сайт"
-  React.useEffect(() => {
+  useEffect(() => {
     const handleOpenAuth = () => {
-      console.log('Открываю модальное окно авторизации');
       setIsAuthModalOpen(true);
     };
 
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+    };
+
     window.addEventListener('openAuth', handleOpenAuth);
+    window.addEventListener('hashchange', handleHashChange);
     
     return () => {
       window.removeEventListener('openAuth', handleOpenAuth);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
 
-  // Кнопка "Выход" после авторизации
   if (auth.isAuthenticated) {
+    if (currentHash === '#/dashboard') {
+      return (
+        <div className="App">
+          <Dashboard />
+          <AuthModal 
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="App">
         <h1 className="app-welcome">Добро пожаловать, {auth.user?.username}!</h1>
         <LandingPage onAuthClose={() => setIsAuthModalOpen(false)} />
         <div className="auth-section">
-          <button className="logout-btn" onClick={() => auth.logout()}>
+          <button 
+            className="logout-btn" 
+            onClick={() => {
+              auth.logout();
+              window.location.hash = '/';
+            }}
+          >
             Выйти
           </button>
         </div>

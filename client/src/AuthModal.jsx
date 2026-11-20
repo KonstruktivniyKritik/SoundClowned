@@ -1,22 +1,22 @@
 import React from 'react';
+import { useAuth } from './context/AuthContext';
 import './AuthModal.css';
 
 const API_URL = 'http://localhost:8081/api/auth';
 
 const AuthModal = ({ isOpen, onClose }) => {
+  const { login } = useAuth();
   const [isRegisterMode, setIsRegisterMode] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [success, setSuccess] = React.useState('');
 
-  // Сброс состояния формы при открытии/закрытии модального окна
   React.useEffect(() => {
     setError('');
     setSuccess('');
     setIsRegisterMode(false);
   }, [isOpen]);
 
-  // Закрытие модального окна по клавише Escape
   React.useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen && onClose) {
@@ -28,7 +28,7 @@ const AuthModal = ({ isOpen, onClose }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null; // Не рендерим компонент, если он закрыт
+  if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,25 +64,20 @@ const AuthModal = ({ isOpen, onClose }) => {
             try {
               const errData = JSON.parse(errorText);
               if (typeof errData === 'string') {
-                // Если сервер вернул JSON-строку, например: "Password must be..."
                 errorMessage = errData;
               } else if (errData.message) {
-                // Если сервер вернул { message: "..." }
                 errorMessage = errData.message;
               } else if (errData.errors) {
-                // Если сработала встроенная валидация полей ASP.NET Core
                 errorMessage = Object.values(errData.errors).flat().join(', ');
               } else if (errData.title) {
                 errorMessage = errData.title;
               }
             } catch {
-              // Если ответ пришел обычным текстом, а не JSON
               errorMessage = errorText;
             }
           }
           throw new Error(errorMessage);
         }
-
 
         setSuccess('Регистрация успешна! Теперь войдите.');
         setTimeout(() => setIsRegisterMode(false), 3000);
@@ -104,20 +99,27 @@ const AuthModal = ({ isOpen, onClose }) => {
             try {
               const errData = JSON.parse(errorText);
               errorMessage = errData.message || errorMessage;
-            } 
-            catch {
+            } catch {
               errorMessage = errorText;
             }
           }
           throw new Error(errorMessage);
         }
 
-        else{
-          console.log("Успешная авторизация!!!");
-            // Закрываем модальное окно после успешного входа
-            setTimeout(() => {
+        const resData = await response.json();
+        const token = resData.token;
+
+        if (token) {
+          // Обновляем состояние в AuthContext (сохранит токен и декодирует user)
+          login(token);
+          setSuccess('Успешный вход! Перенаправление...');
+
+          setTimeout(() => {
             if (onClose) onClose();
-            }, 1500);  
+            window.location.hash = '/dashboard';
+          }, 600);
+        } else {
+          throw new Error('Сервер не вернул токен авторизации');
         }
       }
     } catch (err) {
@@ -129,10 +131,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div 
-      className="auth-modal-overlay" 
-      onClick={onClose}
-    >
+    <div className="auth-modal-overlay" onClick={onClose}>
       <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
         <button 
           className="auth-modal-close" 

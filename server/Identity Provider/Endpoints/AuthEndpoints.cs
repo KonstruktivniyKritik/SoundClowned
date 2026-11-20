@@ -37,7 +37,9 @@ namespace IdentityProvider.Endpoints
 
                 var Claims = new List<Claim>()
                 {
-                    new Claim("role", User.Role!)
+                    new Claim("role", User.Role!),
+                    new Claim("id", User.Id.ToString()),
+                    new Claim("sub", User.Username)
                 };
 
                 var jwtToken = tokenService.GenerateToken(Claims);

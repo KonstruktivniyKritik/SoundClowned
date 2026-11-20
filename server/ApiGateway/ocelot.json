@@ -10,7 +10,7 @@
         }
       ],
       "UpstreamPathTemplate": "/api/auth/{everything}", 
-      "UpstreamHttpMethod": [ "Post", "Get", "Put" ],
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT" ],
       "Priority": 1,
       "Key": "IdentityRoutes",
       "AuthenticationOptions": {

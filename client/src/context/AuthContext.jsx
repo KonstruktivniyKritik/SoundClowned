@@ -36,6 +36,21 @@ export const AuthProvider = ({ children }) => {
     const login = (token) => {
         localStorage.setItem('token', token);
         setIsAuthenticated(true);
+        
+        // Декодируем токен для получения данных пользователя
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            setUser({
+                username: payload.sub || payload.email,
+                email: payload.email,
+                id: payload.id || null,
+                role: payload.role || 'User'
+            });
+        } catch (e) {
+            console.error('Ошибка при декодировании токена:', e);
+            localStorage.removeItem('token');
+            setIsAuthenticated(false);
+        }
     };
 
     const logout = () => {
